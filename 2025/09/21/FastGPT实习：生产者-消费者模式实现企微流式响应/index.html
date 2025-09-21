@@ -1,0 +1,185 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>FastGPT实习：生产者-消费者模式实现企微流式响应 | Fish's Blog</title><meta name="author" content="Fish"><meta name="copyright" content="Fish"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="从企业微信流式响应中学习生产者-消费者模式需求分析：在FastGPT平台，将工作流的发布渠道与企业微信智能机器人对接 实现企业微信回调FastGPT的地址，FastGPT将工作流处理好的AI回复返回给企微 实现企微智能机器人能够使用FastGPT平台的功能  企业微信对接文档-流式响应的架构企微会给回调URL(即自己配置的后台程序)发送两种类型的请求 第一种是消息推送, 只会在第一次向后台程序发送">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FastGPT实习：生产者-消费者模式实现企微流式响应">
+<meta property="og:url" content="http://example.com/2025/09/21/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%BC%81%E5%BE%AE%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94/index.html">
+<meta property="og:site_name" content="Fish&#39;s Blog">
+<meta property="og:description" content="从企业微信流式响应中学习生产者-消费者模式需求分析：在FastGPT平台，将工作流的发布渠道与企业微信智能机器人对接 实现企业微信回调FastGPT的地址，FastGPT将工作流处理好的AI回复返回给企微 实现企微智能机器人能够使用FastGPT平台的功能  企业微信对接文档-流式响应的架构企微会给回调URL(即自己配置的后台程序)发送两种类型的请求 第一种是消息推送, 只会在第一次向后台程序发送">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://image.nickxu.me/202202230023069.jpg">
+<meta property="article:published_time" content="2025-09-21T11:57:54.000Z">
+<meta property="article:modified_time" content="2025-09-21T13:10:33.770Z">
+<meta property="article:author" content="Fish">
+<meta property="article:tag" content="实习经历">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://image.nickxu.me/202202230023069.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/09/21/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%BC%81%E5%BE%AE%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94/index.html"><link rel="preconnect"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="/pluginsSrc/@fortawesome/fontawesome-free/css/all.min.css?v=6.5.1"><link rel="stylesheet" href="/pluginsSrc/@fancyapps/ui/dist/fancybox/fancybox.css?v=5.0.33" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: '/pluginsSrc/@egjs/infinitegrid/dist/infinitegrid.min.js?v=4.11.1',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'FastGPT实习：生产者-消费者模式实现企微流式响应',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2025-09-21 21:10:33'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/my.css"><meta name="generator" content="Hexo 7.2.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-book"></i><span> 文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/todo/"><i class="fa-fw fas fa-list-alt"></i><span> ToDo</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/contact/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://image.nickxu.me/202202230023069.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="Fish's Blog"><span class="site-name">Fish's Blog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-book"></i><span> 文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/todo/"><i class="fa-fw fas fa-list-alt"></i><span> ToDo</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/contact/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">FastGPT实习：生产者-消费者模式实现企微流式响应</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-21T11:57:54.000Z" title="发表于 2025-09-21 19:57:54">2025-09-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-21T13:10:33.770Z" title="更新于 2025-09-21 21:10:33">2025-09-21</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="FastGPT实习：生产者-消费者模式实现企微流式响应"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="从企业微信流式响应中学习生产者-消费者模式"><a href="#从企业微信流式响应中学习生产者-消费者模式" class="headerlink" title="从企业微信流式响应中学习生产者-消费者模式"></a>从企业微信流式响应中学习生产者-消费者模式</h1><p>需求分析：在FastGPT平台，将工作流的发布渠道与企业微信智能机器人对接</p>
+<p>实现企业微信回调FastGPT的地址，FastGPT将工作流处理好的AI回复返回给企微</p>
+<p>实现企微智能机器人能够使用FastGPT平台的功能</p>
+<hr>
+<h2 id="企业微信对接文档-流式响应的架构"><a href="#企业微信对接文档-流式响应的架构" class="headerlink" title="企业微信对接文档-流式响应的架构"></a>企业微信对接文档-流式响应的架构</h2><p>企微会给回调URL(即自己配置的后台程序)发送两种类型的请求</p>
+<p>第一种是消息推送, 只会在第一次向后台程序发送请求时发送</p>
+<p>第二种是轮询请求。即当企微接收到消息推送请求的响应后,开始发送轮询请求</p>
+<p>具体文档可参考 <a target="_blank" rel="noopener" href="https://developer.work.weixin.qq.com/document/path/100719">企业微信智能机器人文档</a></p>
+<hr>
+<h2 id="实现难点"><a href="#实现难点" class="headerlink" title="实现难点"></a>实现难点</h2><ol>
+<li>为什么企业微信要发送轮询请求？消息推送请求和轮询请求的本质区别是什么？需要为两种请求写不一样的逻辑处理吗？</li>
+<li>等待AI输出全部结果，再返回给企微，耗时太长，如何优化</li>
+<li>HTTP 请求是无状态的, 后台程序每收到一次请求, 都不知道上一次请求响应了什么数据, 从而无法实现回复内容的追加</li>
+<li>如果每接收一次请求, 就调用一次AI输出回答. 由于轮询的频率很快, 一次AI回答还没输出完, 就要又一次调用AI输出. 最后会产生“轮询次数 + 1”倍的AI回复</li>
+<li>AI回复结束, 就要停止企微的轮询请求(发送特定格式的数据包), 那么要给后台程序怎样的逻辑, 才能实现AI回复结束,就向企微发送”结束数据包”</li>
+</ol>
+<hr>
+<h2 id="解决过程"><a href="#解决过程" class="headerlink" title="解决过程"></a>解决过程</h2><h3 id="方案一-一次请求对应一次完整回复"><a href="#方案一-一次请求对应一次完整回复" class="headerlink" title="方案一 一次请求对应一次完整回复"></a>方案一 一次请求对应一次完整回复</h3><h3 id="方案-n-生产者-消费者设计模式"><a href="#方案-n-生产者-消费者设计模式" class="headerlink" title="方案 n - 生产者 - 消费者设计模式"></a>方案 n - 生产者 - 消费者设计模式</h3><p>生产者: 消息推送请求</p>
+<p>消费者: 轮询请求</p>
+<p>缓冲区: redis (后续拓展: 消息队列)</p>
+<h4 id="具体效果"><a href="#具体效果" class="headerlink" title="具体效果"></a>具体效果</h4><p>用户向企微发送消息后, 企微会先向后台程序发送一次消息推送</p>
+<p>后台程序接收推送并按照企微的要求响应，并将响应内容写入redis中</p>
+<p>写入是以追加的形式写入，即每次携带的数据都是上一次携带数据的追加值(累加值)</p>
+<p>当企微接收到消息推送请求的响应后, 将开始发送轮询请求(发送时间间隔 &lt; 1s )</p>
+<p>后台程序接收到一次轮询请求后，就从redis中取出数据,并返回给企微</p>
+<p>企微每一次得到的数据都是在前一次的基础上累加，所以输出的文本会逐步变多，实现流式响应的效果</p>
+<p>当后台程序发现AI已经回复完成后，会在文本末尾加上“[DONE]”，表示回复结束</p>
+<p>此时程序检测到文本末尾的内容，就会向企微发送一个特殊格式的数据包，标志着回复结束</p>
+<p>企微接收到结束数据包，便不再发送请求，轮询结束，一次AI对话完成</p>
+<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Fish</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/09/21/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%BC%81%E5%BE%AE%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94/">http://example.com/2025/09/21/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%BC%81%E5%BE%AE%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">Fish's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/">实习经历</a></div><div class="post_share"><div class="social-share" data-image="https://image.nickxu.me/202202230023069.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="/pluginsSrc/butterfly-extsrc/sharejs/dist/css/share.min.css?v=1.1.3" media="print" onload="this.media='all'"><script src="/pluginsSrc/butterfly-extsrc/sharejs/dist/js/social-share.min.js?v=1.1.3" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2025/05/09/%E6%94%AF%E6%8C%81%E5%90%91%E9%87%8F%E6%9C%BA%EF%BC%88SVM%EF%BC%89%E5%88%9D%E8%A7%81/" title="支持向量机（SVM）初见"><img class="cover" src="https://image.nickxu.me/202202230023069.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">支持向量机（SVM）初见</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Fish</div><div class="author-info__description">大胆假设，小心求证</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/fishwww-ww"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%8E%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94%E4%B8%AD%E5%AD%A6%E4%B9%A0%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.</span> <span class="toc-text">从企业微信流式响应中学习生产者-消费者模式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E5%AF%B9%E6%8E%A5%E6%96%87%E6%A1%A3-%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94%E7%9A%84%E6%9E%B6%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">企业微信对接文档-流式响应的架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E9%9A%BE%E7%82%B9"><span class="toc-number">1.2.</span> <span class="toc-text">实现难点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E8%BF%87%E7%A8%8B"><span class="toc-number">1.3.</span> <span class="toc-text">解决过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%A1%88%E4%B8%80-%E4%B8%80%E6%AC%A1%E8%AF%B7%E6%B1%82%E5%AF%B9%E5%BA%94%E4%B8%80%E6%AC%A1%E5%AE%8C%E6%95%B4%E5%9B%9E%E5%A4%8D"><span class="toc-number">1.3.1.</span> <span class="toc-text">方案一 一次请求对应一次完整回复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%A1%88-n-%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.3.2.</span> <span class="toc-text">方案 n - 生产者 - 消费者设计模式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E6%95%88%E6%9E%9C"><span class="toc-number">1.3.2.1.</span> <span class="toc-text">具体效果</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%98%E7%82%B9"><span class="toc-number">1.3.2.2.</span> <span class="toc-text">优点</span></a></li></ol></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/21/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E4%BC%81%E5%BE%AE%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94/" title="FastGPT实习：生产者-消费者模式实现企微流式响应">FastGPT实习：生产者-消费者模式实现企微流式响应</a><time datetime="2025-09-21T11:57:54.000Z" title="发表于 2025-09-21 19:57:54">2025-09-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/05/09/%E6%94%AF%E6%8C%81%E5%90%91%E9%87%8F%E6%9C%BA%EF%BC%88SVM%EF%BC%89%E5%88%9D%E8%A7%81/" title="支持向量机（SVM）初见">支持向量机（SVM）初见</a><time datetime="2025-05-09T09:15:40.000Z" title="发表于 2025-05-09 17:15:40">2025-05-09</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/04/17/%E3%80%8A%E4%BA%BA%E6%9C%88%E7%A5%9E%E8%AF%9D%E3%80%8B%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" title="《人月神话》读书笔记">《人月神话》读书笔记</a><time datetime="2025-04-17T11:22:37.000Z" title="发表于 2025-04-17 19:22:37">2025-04-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/04/12/go%E7%88%AC%E8%99%AB%E5%AD%A6%E4%B9%A0/" title="go爬虫学习">go爬虫学习</a><time datetime="2025-04-12T08:57:22.000Z" title="发表于 2025-04-12 16:57:22">2025-04-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/06/11/myFirstBlog/" title="myFirstBlog">myFirstBlog</a><time datetime="2024-06-11T12:57:55.000Z" title="发表于 2024-06-11 20:57:55">2024-06-11</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2025 By Fish</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="/pluginsSrc/@fancyapps/ui/dist/fancybox/fancybox.umd.js?v=5.0.33"></script><div class="js-pjax"></div><script data-pjax defer src="/js/my.js"></script><script defer="defer" id="ribbon" src="/pluginsSrc/butterfly-extsrc/dist/canvas-ribbon.min.js?v=1.1.3" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.13.0"></script></div></div></body></html>
