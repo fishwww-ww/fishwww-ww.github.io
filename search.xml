@@ -4,6 +4,25 @@
   
     
     <entry>
+      <title>FastGPT实习：从渲染和请求的时序中学习React设计哲学</title>
+      <link href="/2025/10/08/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E4%BB%8E%E6%B8%B2%E6%9F%93%E5%92%8C%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%B6%E5%BA%8F%E4%B8%AD%E5%AD%A6%E4%B9%A0React%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6/"/>
+      <url>/2025/10/08/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E4%BB%8E%E6%B8%B2%E6%9F%93%E5%92%8C%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%B6%E5%BA%8F%E4%B8%AD%E5%AD%A6%E4%B9%A0React%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6/</url>
+      
+        <content type="html"><![CDATA[<h1 id="从渲染和请求的时序中学习React设计哲学"><a href="#从渲染和请求的时序中学习React设计哲学" class="headerlink" title="从渲染和请求的时序中学习React设计哲学"></a>从渲染和请求的时序中学习React设计哲学</h1><p>需求分析：在 FastGPT 平台开发过程中，遇到组件渲染与异步请求时序问题</p><p>通过解决组件渲染空数组的问题，深入理解 React 的异步渲染机制和设计哲学</p><p>学习如何优雅地处理异步数据加载与组件渲染的协调</p><hr><h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>打开一个modal时, 网络请求已经获取到了数据, 但是modal没有渲染出数据</p><h3 id="核心问题"><a href="#核心问题" class="headerlink" title="核心问题"></a>核心问题</h3><p>组件渲染和API请求是异步进行的，导致组件优先渲染了变量的初值（空数组）</p><p>当异步请求获取到数据，填充到数组中时，组件已经渲染完毕了</p><p>最终结果就是渲染了空数组</p><h3 id="问题影响"><a href="#问题影响" class="headerlink" title="问题影响"></a>问题影响</h3><ul><li>用户看到空白或加载状态</li><li>数据更新后界面不会自动刷新</li><li>用户体验不佳</li></ul><hr><h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><h3 id="技术方案"><a href="#技术方案" class="headerlink" title="技术方案"></a>技术方案</h3><p>使用 <code>useMemo</code> 来缓存数组，并将请求的数据变量作为依赖项</p><p>请求成功，依赖项变化，更新数组，进而重新渲染组件</p><p>解决渲染空数组的问题</p><h3 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h3><ol><li>组件初始渲染时显示空数组</li><li>异步请求开始执行</li><li>请求完成后，依赖项更新</li><li><code>useMemo</code> 检测到依赖变化，重新计算</li><li>组件重新渲染，显示实际数据</li></ol><hr><h2 id="方案优点"><a href="#方案优点" class="headerlink" title="方案优点"></a>方案优点</h2><h3 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h3><p>不会因为某一个数组在加载中，而阻塞渲染，让整个组件树等待，提升使用体验</p><p>可以让多个数据源同时加载，并发渲染</p><h3 id="用户体验"><a href="#用户体验" class="headerlink" title="用户体验"></a>用户体验</h3><ul><li>页面快速响应，不会出现长时间白屏</li><li>数据加载过程中有明确的加载状态</li><li>数据更新后界面自动刷新</li></ul><hr><h2 id="React-的设计哲学"><a href="#React-的设计哲学" class="headerlink" title="React 的设计哲学"></a>React 的设计哲学</h2><h3 id="渲染机制"><a href="#渲染机制" class="headerlink" title="渲染机制"></a>渲染机制</h3><p>React 遵循以下设计原则：</p><ol><li><strong>组件先渲染初始状态</strong>（loading 或 empty state）</li><li><strong>异步获取数据</strong></li><li><strong>数据返回后重新渲染</strong>（显示实际内容）</li></ol><h3 id="实际应用"><a href="#实际应用" class="headerlink" title="实际应用"></a>实际应用</h3><p>这种设计哲学使得 React 应用能够：</p><ul><li>快速响应用户交互</li><li>优雅地处理异步数据</li><li>提供良好的用户体验</li><li>支持复杂的应用状态管理</li></ul><hr><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过解决异步请求与组件渲染的时序问题，深入理解了 React 的设计哲学</p><p>React 鼓励开发者将异步操作与 UI 渲染解耦，通过声明式的方式管理状态</p><p>这种设计不仅提升了性能，也改善了用户体验，是现代前端框架的重要特征</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> 实习经历 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>FastGPT实习：扫描二维码实现自动兑换积分</title>
       <link href="/2025/10/07/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E6%89%AB%E6%8F%8F%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%8A%A8%E5%85%91%E6%8D%A2%E7%A7%AF%E5%88%86/"/>
       <url>/2025/10/07/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E6%89%AB%E6%8F%8F%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%8A%A8%E5%85%91%E6%8D%A2%E7%A7%AF%E5%88%86/</url>
