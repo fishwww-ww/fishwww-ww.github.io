@@ -4,6 +4,25 @@
   
     
     <entry>
+      <title>FastGPT实习：双Token验证实现CSRF防御</title>
+      <link href="/2025/10/12/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E5%8F%8CToken%E9%AA%8C%E8%AF%81%E5%AE%9E%E7%8E%B0CSRF%E9%98%B2%E5%BE%A1/"/>
+      <url>/2025/10/12/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E5%8F%8CToken%E9%AA%8C%E8%AF%81%E5%AE%9E%E7%8E%B0CSRF%E9%98%B2%E5%BE%A1/</url>
+      
+        <content type="html"><![CDATA[<h1 id="双Token验证实现CSRF防御"><a href="#双Token验证实现CSRF防御" class="headerlink" title="双Token验证实现CSRF防御"></a>双Token验证实现CSRF防御</h1><p>需求分析：在 FastGPT 平台发现安全漏洞，发送markdown渲染的img标签，如果src属性为”删除api”的路径（如：<code>/api/core/dataset/delete</code>），则会将用户的知识库自动删除</p><p>通过实现双Token验证机制，有效防御CSRF（跨站请求伪造）攻击</p><p>保护用户数据安全，防止恶意站点利用用户身份执行敏感操作</p><hr><h2 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h2><h3 id="漏洞描述"><a href="#漏洞描述" class="headerlink" title="漏洞描述"></a>漏洞描述</h3><p>发送markdown渲染的img标签，如果src属性为”删除api”的路径（如：<code>/api/core/dataset/delete</code>），则会将用户的知识库自动删除</p><h3 id="问题本质"><a href="#问题本质" class="headerlink" title="问题本质"></a>问题本质</h3><p>由于前端请求自动携带浏览器cookie作为请求头，后端校验通过后，执行图片中的路径，造成CSRF恶意攻击</p><h3 id="攻击原理"><a href="#攻击原理" class="headerlink" title="攻击原理"></a>攻击原理</h3><ol><li>用户已登录平台，浏览器中存储cookie信息</li><li>恶意站点的某些表单、图片等请求指向平台的敏感接口</li><li>当用户被诱导访问后，浏览器会在请求中自动添加cookie</li><li>仅凭Cookie做鉴权的服务端误以为是用户本人操作，执行敏感动作</li></ol><hr><h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><h3 id="技术方案：双Token验证"><a href="#技术方案：双Token验证" class="headerlink" title="技术方案：双Token验证"></a>技术方案：双Token验证</h3><h4 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h4><ol><li><p><strong>前端Token获取</strong>：</p><ul><li>前端发送请求前，检测本地存储中没有<code>csrf_token</code>，或者过期时间小于阈值时间</li><li>主动请求后端生成<code>csrf_token</code>，前端接受后解密出token值和过期时间</li><li>保存在本地存储中</li></ul></li><li><p><strong>请求头设置</strong>：</p><ul><li>前端在请求前设置<code>x-csrf-token</code>请求头</li><li>值为本地存储中<code>csrf_token</code>的值</li></ul></li><li><p><strong>后端验证</strong>：</p><ul><li>后端收到请求后，从cookie中拿到<code>csrf_token</code></li><li>从请求头中拿到<code>x-csrf-token</code></li><li>验证两个值是否过期，是否相等</li><li>没有问题后再验证通过</li></ul></li><li><p><strong>自动下发</strong>：</p><ul><li>后端检测到请求头没有<code>x-csrf-token</code>时，要主动生成token下发给前端</li></ul></li></ol><hr><h2 id="防御效果"><a href="#防御效果" class="headerlink" title="防御效果"></a>防御效果</h2><h3 id="成功防御案例"><a href="#成功防御案例" class="headerlink" title="成功防御案例"></a>成功防御案例</h3><p>如果添加了双Token验证：</p><ol><li>恶意站点与平台不同源，所以读取不到cookie</li><li>无法配置cookie和请求头</li><li>从而无法通过验证，有效防御CSRF攻击</li></ol><h3 id="安全机制"><a href="#安全机制" class="headerlink" title="安全机制"></a>安全机制</h3><ul><li><strong>双重验证</strong>：cookie中的token + 请求头中的token</li><li><strong>时效性控制</strong>：token具有过期时间</li><li><strong>同源策略</strong>：恶意站点无法获取有效token</li></ul><hr><h2 id="技术细节"><a href="#技术细节" class="headerlink" title="技术细节"></a>技术细节</h2><h3 id="重要注意事项"><a href="#重要注意事项" class="headerlink" title="重要注意事项"></a>重要注意事项</h3><ol><li><p><strong>Cookie安全</strong>：</p><ul><li>因为要禁止cookie能通过JS脚本获取，所以要给cookie加上<code>httpOnly</code>属性</li><li>而<code>csrf_token</code>值又需要添加到请求头中，所以要在本地存储中存<code>csrf_token</code></li></ul></li><li><p><strong>避免循环</strong>：</p><ul><li>生成<code>csrf_token</code>的接口要跳过<code>csrf_token</code>的验证</li><li>否则会陷入循环请求的死循环中</li></ul></li></ol><h3 id="实现优势"><a href="#实现优势" class="headerlink" title="实现优势"></a>实现优势</h3><ul><li><strong>安全性高</strong>：双重验证机制，有效防御CSRF攻击</li><li><strong>用户体验好</strong>：自动处理token获取和验证</li><li><strong>维护性强</strong>：逻辑清晰，易于维护和扩展</li></ul><hr><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过实现双Token验证机制，成功解决了FastGPT平台的CSRF安全漏洞</p><p>这种防御机制不仅保护了用户数据安全，也为类似的安全问题提供了解决方案</p><p>在现代Web应用中，CSRF防御是必不可少的安全措施，双Token验证是一种有效且实用的实现方案</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> 实习经历 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>FastGPT实习：从渲染和请求的时序中学习React设计哲学</title>
       <link href="/2025/10/08/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E4%BB%8E%E6%B8%B2%E6%9F%93%E5%92%8C%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%B6%E5%BA%8F%E4%B8%AD%E5%AD%A6%E4%B9%A0React%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6/"/>
       <url>/2025/10/08/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E4%BB%8E%E6%B8%B2%E6%9F%93%E5%92%8C%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%B6%E5%BA%8F%E4%B8%AD%E5%AD%A6%E4%B9%A0React%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6/</url>
