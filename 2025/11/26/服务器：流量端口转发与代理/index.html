@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>服务器：流量端口转发与代理 | Fish's Blog</title><meta name="author" content="Fish"><meta name="copyright" content="Fish"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="概览实现 SSH 免密登录，并让云服务器流量转发到本地端口，通过代理再返回。 免密登录打开 ~&#x2F;.ssh&#x2F;config，写入： 1234Host &lt;server ip&gt;    HostName &lt;server ip&gt;    User root           # 默认为 root 用户    Port 22             # SSH 默认端口  打开 Curs">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务器：流量端口转发与代理">
+<meta property="og:url" content="http://example.com/2025/11/26/%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%9A%E6%B5%81%E9%87%8F%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E4%B8%8E%E4%BB%A3%E7%90%86/index.html">
+<meta property="og:site_name" content="Fish&#39;s Blog">
+<meta property="og:description" content="概览实现 SSH 免密登录，并让云服务器流量转发到本地端口，通过代理再返回。 免密登录打开 ~&#x2F;.ssh&#x2F;config，写入： 1234Host &lt;server ip&gt;    HostName &lt;server ip&gt;    User root           # 默认为 root 用户    Port 22             # SSH 默认端口  打开 Curs">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://image.nickxu.me/202202230023069.jpg">
+<meta property="article:published_time" content="2025-11-26T07:46:09.000Z">
+<meta property="article:modified_time" content="2025-11-26T09:07:43.939Z">
+<meta property="article:author" content="Fish">
+<meta property="article:tag" content="服务器">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://image.nickxu.me/202202230023069.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "服务器：流量端口转发与代理",
+  "url": "http://example.com/2025/11/26/%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%9A%E6%B5%81%E9%87%8F%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E4%B8%8E%E4%BB%A3%E7%90%86/",
+  "image": "https://image.nickxu.me/202202230023069.jpg",
+  "datePublished": "2025-11-26T07:46:09.000Z",
+  "dateModified": "2025-11-26T09:07:43.939Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Fish",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/11/26/%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%9A%E6%B5%81%E9%87%8F%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E4%B8%8E%E4%BB%A3%E7%90%86/index.html"><link rel="preconnect"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.2"><link rel="stylesheet" href="/pluginsSrc/@fortawesome/fontawesome-free/css/all.min.css?v=7.1.0"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: '/pluginsSrc/@egjs/infinitegrid/dist/infinitegrid.min.js?v=4.12.0',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '服务器：流量端口转发与代理',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/my.css"><meta name="generator" content="Hexo 7.2.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/favicon.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-book"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/todo/"><i class="fa-fw fas fa-list-alt"></i><span> ToDo</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/contact/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://image.nickxu.me/202202230023069.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Fish's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">服务器：流量端口转发与代理</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-book"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/todo/"><i class="fa-fw fas fa-list-alt"></i><span> ToDo</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/contact/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">服务器：流量端口转发与代理</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-11-26T07:46:09.000Z" title="发表于 2025-11-26 15:46:09">2025-11-26</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-11-26T09:07:43.939Z" title="更新于 2025-11-26 17:07:43">2025-11-26</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="概览"><a href="#概览" class="headerlink" title="概览"></a>概览</h1><p>实现 SSH 免密登录，并让云服务器流量转发到本地端口，通过代理再返回。</p>
+<h2 id="免密登录"><a href="#免密登录" class="headerlink" title="免密登录"></a>免密登录</h2><p>打开 <code>~/.ssh/config</code>，写入：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Host &lt;server ip&gt;</span><br><span class="line">    HostName &lt;server ip&gt;</span><br><span class="line">    User root           <span class="comment"># 默认为 root 用户</span></span><br><span class="line">    Port 22             <span class="comment"># SSH 默认端口</span></span><br></pre></td></tr></table></figure>
+
+<p>打开 Cursor 的 Remote Explorer，会看到多了 <code>&lt;server ip&gt;</code> 这个选项。</p>
+<p>现在配置免密</p>
+<ol>
+<li><p><strong>本机生成密钥</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t ed25519  <span class="comment"># 随便取一个文件名</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>公钥写入服务器</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-copy-id ~/.ssh/id_ed25519.pub &lt;user&gt;@&lt;server-ip&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>验证免密登录</strong></p>
+</li>
+</ol>
+<p>打开 Cursor 的 Remote Explorer，直接点击配置的 <code>&lt;server ip&gt;</code>；也可以使用命令行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh &lt;user&gt;@&lt;server-ip&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="端口转发与代理"><a href="#端口转发与代理" class="headerlink" title="端口转发与代理"></a>端口转发与代理</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>建立与云服务器的 SSH 正向隧道后，再搭建一条反向隧道（云服务器 -&gt; 本机）。以下以 “云服务器 1080 端口 ↔ 本机 7897 端口” 为例：</p>
+<ul>
+<li>云服务器访问外网时，将流量统一发到 1080 端口。</li>
+<li>反向隧道把 1080 端口的流量转发到本机 7897。</li>
+<li>本机 7897 端口交给代理软件，按节点分发，再把结果回传给云服务器。</li>
+</ul>
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>提供三种实现方法，实现方法三选一即可, 但是前置步骤要完成</p>
+<h4 id="前置步骤"><a href="#前置步骤" class="headerlink" title="前置步骤"></a>前置步骤</h4><ol>
+<li>在代理软件的端口设置中开启混合端口转发（以 7897 为例）。</li>
+<li>在云服务器中配置环境变量，统一走 1080 端口。编辑 <code>~/.bashrc</code>：</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 检查代理是否可用并自动选择代理或直连</span></span><br><span class="line">PROXY_SERVER=<span class="string">&quot;127.0.0.1&quot;</span></span><br><span class="line">PROXY_PORT=<span class="string">&quot;1080&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试代理是否可用</span></span><br><span class="line"><span class="keyword">if</span> curl -x socks5://<span class="variable">$PROXY_SERVER</span>:<span class="variable">$PROXY_PORT</span> -s --<span class="built_in">head</span> --max-time 5 https://www.google.com | grep <span class="string">&quot;HTTP/1.1 200 OK&quot;</span> &gt; /dev/null 2&gt;&amp;1; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;代理可用，使用代理&quot;</span></span><br><span class="line">    <span class="built_in">export</span> ALL_PROXY=socks5://<span class="variable">$PROXY_SERVER</span>:<span class="variable">$PROXY_PORT</span></span><br><span class="line">    <span class="built_in">export</span> HTTP_PROXY=<span class="variable">$ALL_PROXY</span></span><br><span class="line">    <span class="built_in">export</span> HTTPS_PROXY=<span class="variable">$ALL_PROXY</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;代理不可用，切换到直连&quot;</span></span><br><span class="line">    <span class="built_in">unset</span> ALL_PROXY</span><br><span class="line">    <span class="built_in">unset</span> HTTP_PROXY</span><br><span class="line">    <span class="built_in">unset</span> HTTPS_PROXY</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+<p>保存后运行 <code>source ~/.bashrc</code> 使其生效。</p>
+<ol start="3">
+<li>编辑 <code>/etc/ssh/sshd_config</code>，将以下参数取消注释并设为 <code>yes</code>：<ul>
+<li><code>AllowTcpForwarding</code>：允许 SSH 客户端发起本地&#x2F;远程端口转发。</li>
+<li><code>GatewayPorts</code>：远程端口转发可绑定 <code>0.0.0.0/::</code>。</li>
+<li><code>PermitTunnel</code>：允许基于 SSH 的三层隧道。</li>
+</ul>
+</li>
+</ol>
+<h4 id="三种方法"><a href="#三种方法" class="headerlink" title="三种方法"></a>三种方法</h4><p>注: 三种方法在云服务器上绑定的端口都是 1080, 最好用完一个方法就关闭, 而不是一起使用, 否则可能造成端口冲突</p>
+<ol>
+<li>写入本地 SSH 配置<br>在 <code>~/.ssh/config</code> 中（基于免密配置）写入：</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Host 47.99.61.16</span><br><span class="line">    HostName 47.99.61.16</span><br><span class="line">    User root</span><br><span class="line">    Port 22</span><br><span class="line">    <span class="comment"># 追加下面三条即可</span></span><br><span class="line">    RemoteForward 1080 localhost:7897</span><br><span class="line">    ServerAliveInterval 30</span><br><span class="line">    ServerAliveCountMax 3</span><br></pre></td></tr></table></figure>
+
+<p>写好后，Cursor 远程连接服务器时会自动启动反向隧道。</p>
+<ol start="2">
+<li><p>使用脚本与工具保持隧道</p>
+<ul>
+<li>普通 SSH，一旦关闭终端会话就会断开：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ssh -M 0 -f -N -v -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \</span><br><span class="line">    -i ~/.ssh/&lt;key file name&gt; -R 1080:localhost:7897 &lt;user&gt;@&lt;server ip&gt;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>使用 <code>autossh</code> 可以保持连接，先通过 Homebrew 安装：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install autossh</span><br></pre></td></tr></table></figure>
+
+<p>再写脚本方便启动和提示：</p>
+</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 文件名 start_ssh_tunnel.sh</span></span><br><span class="line">autossh -M 0 -f -N -v -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -i ~/.ssh/&lt;key file name&gt; -R 1080:localhost:7897 &lt;user&gt;@&lt;server ip&gt;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ $? -eq 0 ]; <span class="keyword">then</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;\033[32m✅ 隧道启动成功！\033[0m&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;📌 验证方法：&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;  1. Mac 端查看进程：ps aux | grep autossh&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;  2. 服务器端查看端口：ss -tulnp | grep :1080&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;  3. 关闭隧道：pkill autossh&quot;</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;\033[31m❌ 隧道启动失败！\033[0m&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;🔍 可能原因：&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;  1. autossh 未安装（执行 brew install autossh）&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;  2. 密钥路径错误（当前路径：~/.ssh/id_rsa）&quot;</span></span><br><span class="line">  <span class="built_in">echo</span> -e <span class="string">&quot;  3. 服务器 1080 端口被占用&quot;</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+<p>后续操作：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 打开端口转发</span></span><br><span class="line">./start_ssh_tunnel.sh</span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭端口转发</span></span><br><span class="line">pkill autossh</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看 autossh 相关进程（含 grep 本身）</span></span><br><span class="line">ps aux | grep autossh</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li><p>Termius 配置端口转发<br>在 Termius 左侧 Port Forwarding 中新建规则：</p>
+<ul>
+<li>Remote host: <code>&lt;server ip&gt;</code></li>
+<li>Remote port: <code>1080</code></li>
+<li>Bind address: <code>127.0.0.1</code></li>
+<li>Destination address: <code>127.0.0.1</code></li>
+<li>Destination port: <code>7897</code></li>
+</ul>
+<p>没搞懂 Bind address 和 Destination address 的区别<br>不过确认 Termius 显示 <code>From &lt;server ip&gt;:1080 to 127.0.0.1:7897</code> 即表示已连通，启用后再连接服务器即可完成转发。</p>
+</li>
+</ol>
+<h4 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h4><p>测试要使用 <code>curl</code>, 而不能使用 <code>ping</code><br>因为 <code>ping</code> 基于 <code>ICMP</code> 协议, 运行在网络层，而我们配置的 SSH 端口转发 + 代理仅支持 <code>TCP</code>&#x2F;<code>UDP</code> 协议，<code>ICMP</code> 数据包无法通过代理隧道转发</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 请求国内网络</span></span><br><span class="line">curl -v https://baidu.com</span><br><span class="line"></span><br><span class="line"><span class="comment"># 请求国外网络</span></span><br><span class="line">curl -v https://google.com</span><br></pre></td></tr></table></figure>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Fish</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/11/26/%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%9A%E6%B5%81%E9%87%8F%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E4%B8%8E%E4%BB%A3%E7%90%86/">http://example.com/2025/11/26/%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%9A%E6%B5%81%E9%87%8F%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E4%B8%8E%E4%BB%A3%E7%90%86/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Fish's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/">服务器</a></div><div class="post-share"><div class="social-share" data-image="https://image.nickxu.me/202202230023069.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="/pluginsSrc/butterfly-extsrc/sharejs/dist/css/share.min.css?v=1.1.6" media="print" onload="this.media='all'"><script src="/pluginsSrc/butterfly-extsrc/sharejs/dist/js/social-share.min.js?v=1.1.6" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/10/18/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E7%B3%BB%E7%BB%9F%E6%8F%92%E4%BB%B6%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA%E4%B8%8E%E6%8F%92%E4%BB%B6%E7%94%9F%E6%80%81%E8%B4%A1%E7%8C%AE/" title="FastGPT实习：系统插件项目构建与插件生态贡献"><img class="cover" src="https://image.nickxu.me/202202230023069.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">FastGPT实习：系统插件项目构建与插件生态贡献</div></div><div class="info-2"><div class="info-item-1">系统插件项目构建通过三个机制实现插件项目快速构建 1. 零配置机制两个核心机制:  约定优于配置 自动发现机制  实现细节:  系统启动: 系统启动时调用initTools, 包含initBuiltInTools和refreshUploadedTools两部分 自动发现: 判断是开发环境还是生产环境, 扫描对应的路径目录, 得到工具目录数组, 对于工具目录数组的每一个元素(工具目录), 调用LoadToolsByFilename, Filename即目录名称 动态加载: 动态导入插件, 识别是工具还是工具集, 约定默认toolId和icon, 加载工具(或副工具集下的所有子工具) 自动注册: 将加载的工具添加到全局插件列表, 实现插件自动可用, 无需手动配置  2. 脚本一键生成模板 使用nodejs全局变量: __dirname, process 提前创建好工具和工具集模板 copyTemplate函数: 如果是文件夹则递归调用, 如果是文件则复制, 这样就把模板变成能实际开发的代码结构  3. 插件热插拔系统插件分为内置插件和用户自定义插件两部分, 插件热插拔针对的是用户自定...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/favicon.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Fish</div><div class="author-info-description">大胆假设，小心求证</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/fishwww-ww"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A6%82%E8%A7%88"><span class="toc-number">1.</span> <span class="toc-text">概览</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95"><span class="toc-number">1.1.</span> <span class="toc-text">免密登录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E4%B8%8E%E4%BB%A3%E7%90%86"><span class="toc-number">1.2.</span> <span class="toc-text">端口转发与代理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">1.2.1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.2.2.</span> <span class="toc-text">实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%89%8D%E7%BD%AE%E6%AD%A5%E9%AA%A4"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">前置步骤</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%89%E7%A7%8D%E6%96%B9%E6%B3%95"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">三种方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95"><span class="toc-number">1.2.2.3.</span> <span class="toc-text">测试</span></a></li></ol></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/26/%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%9A%E6%B5%81%E9%87%8F%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E4%B8%8E%E4%BB%A3%E7%90%86/" title="服务器：流量端口转发与代理">服务器：流量端口转发与代理</a><time datetime="2025-11-26T07:46:09.000Z" title="发表于 2025-11-26 15:46:09">2025-11-26</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/10/18/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E7%B3%BB%E7%BB%9F%E6%8F%92%E4%BB%B6%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA%E4%B8%8E%E6%8F%92%E4%BB%B6%E7%94%9F%E6%80%81%E8%B4%A1%E7%8C%AE/" title="FastGPT实习：系统插件项目构建与插件生态贡献">FastGPT实习：系统插件项目构建与插件生态贡献</a><time datetime="2025-10-18T06:40:09.000Z" title="发表于 2025-10-18 14:40:09">2025-10-18</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/10/17/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E5%B7%A5%E4%BD%9C%E6%B5%81%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6%E4%B8%8E%E8%B0%83%E8%AF%95%E6%A8%A1%E5%BC%8F/" title="FastGPT实习：工作流运行机制与调试模式">FastGPT实习：工作流运行机制与调试模式</a><time datetime="2025-10-17T15:21:16.000Z" title="发表于 2025-10-17 23:21:16">2025-10-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/10/12/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9AAI%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94%E5%85%A8%E9%93%BE%E8%B7%AF%E5%88%86%E6%9E%90/" title="FastGPT实习：AI流式响应全链路分析">FastGPT实习：AI流式响应全链路分析</a><time datetime="2025-10-12T03:17:03.000Z" title="发表于 2025-10-12 11:17:03">2025-10-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/10/12/FastGPT%E5%AE%9E%E4%B9%A0%EF%BC%9A%E5%8F%8CToken%E9%AA%8C%E8%AF%81%E5%AE%9E%E7%8E%B0CSRF%E9%98%B2%E5%BE%A1/" title="FastGPT实习：双Token验证实现CSRF防御">FastGPT实习：双Token验证实现CSRF防御</a><time datetime="2025-10-12T03:11:25.000Z" title="发表于 2025-10-12 11:11:25">2025-10-12</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2025 By Fish</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.2"></script><script src="/js/main.js?v=5.5.2"></script><div class="js-pjax"></div><script data-pjax defer src="/js/my.js"></script><script defer="defer" id="ribbon" src="/pluginsSrc/butterfly-extsrc/dist/canvas-ribbon.min.js?v=1.1.6" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="true"></script><script async data-pjax src="/"></script></div></body></html>
